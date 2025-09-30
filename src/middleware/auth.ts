@@ -1,28 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
-import { env } from '../config/env';
-import logger from '../lib/logger';
+import { ApiError } from '../lib/errors';
 import { verifyToken } from '../lib/tokens';
 
-function parseAuthHeader(req: Request): string | null {
-  const h = req.headers['authorization'];
-  if (!h || Array.isArray(h)) return null;
-  const [scheme, token] = h.split(' ');
-  if (!scheme || scheme.toLowerCase() !== 'bearer') return null;
-  return token || null;
+function bearerToken(req: Request): string | null {
+  const header = req.headers.authorization;
+  if (!header) return null;
+  const [scheme, token] = header.split(' ');
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
+  return token;
 }
 
-export function attachUserIfPresent(req: Request, _res: Response, next: NextFunction) {
+/** Populates req.user from a valid Bearer token or answers 401. */
+export function requireAuth(req: Request, _res: Response, next: NextFunction) {
+  const token = bearerToken(req);
+  if (!token) return next(ApiError.unauthorized('Authentication required'));
   try {
-    const token = parseAuthHeader(req);
-    if (token) req.user = verifyToken(token);
-  } catch (err) {
-    logger.warn({ err }, 'Failed to parse/verify JWT');
+    req.user = verifyToken(token);
+  } catch {
+    return next(ApiError.unauthorized('Invalid or expired token'));
   }
   next();
-}
-
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!env.AUTH_REQUIRED) return next();
-  if (req.user?.id) return next();
-  return res.status(401).json({ error: { message: 'Unauthorized' } });
 }

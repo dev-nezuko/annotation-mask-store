@@ -10,7 +10,6 @@ const EnvSchema = z.object({
     .min(32, 'JWT_SECRET must be at least 32 characters (e.g. `openssl rand -hex 32`)')
     .refine((s) => !/^<.*>$/.test(s), 'JWT_SECRET is still the .env.example placeholder'),
   JWT_EXPIRES_IN: z.string().regex(/^\d+[smhd]$/, 'JWT_EXPIRES_IN must look like 15m, 1h or 7d').default('1h'),
-  AUTH_REQUIRED: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -22,7 +21,6 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     LOG_LEVEL: source.LOG_LEVEL,
     JWT_SECRET: source.JWT_SECRET,
     JWT_EXPIRES_IN: source.JWT_EXPIRES_IN,
-    AUTH_REQUIRED: source.AUTH_REQUIRED,
   });
 }
 

@@ -8,7 +8,6 @@ import { randomUUID } from 'crypto';
 import apiRouter from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './lib/logger';
-import { attachUserIfPresent } from './middleware/auth';
 
 const app = express();
 
@@ -17,7 +16,6 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(attachUserIfPresent);
 app.use(pinoHttp({
   logger,
   genReqId: (req: IncomingMessage, _res: ServerResponse) => (req.headers['x-request-id'] as string) || randomUUID(),

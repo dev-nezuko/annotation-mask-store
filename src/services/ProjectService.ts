@@ -3,32 +3,28 @@ import { ProjectRepo } from '../repositories/ProjectRepo';
 import { ImageRepo } from '../repositories/ImageRepo';
 import { AnnotationRepo } from '../repositories/AnnotationRepo';
 import { ApiError } from '../lib/errors';
+import { Caller, canAccessProject } from '../lib/access';
 import { User } from '../models/User';
 
 export class ProjectService {
-  static async create(input: { name: string; description?: string; createdBy?: string }) {
-    const { name, description, createdBy } = input;
+  static async create(caller: Caller, input: { name: string; description?: string }) {
+    const { name, description } = input;
     if (!name) throw ApiError.badRequest('name is required');
 
-    let createdById: string | undefined;
-    if (createdBy) {
-      if (!isValidObjectId(createdBy)) throw ApiError.badRequest('createdBy must be a valid ObjectId string');
-      createdById = createdBy;
-    }
-
-    const project = await ProjectRepo.create({ name, description, createdBy: createdById as any });
+    const project = await ProjectRepo.create({ name, description, createdBy: caller.id as any });
     return project;
   }
 
-  static async getById(id: string) {
+  /** Loads a project the caller may see. Other people's projects are reported as missing. */
+  static async getById(caller: Caller, id: string) {
     if (!isValidObjectId(id)) throw ApiError.badRequest('Invalid project id format');
     const project = await ProjectRepo.findById(id);
-    if (!project) throw ApiError.notFound('Project does not exist');
+    if (!project || !canAccessProject(caller, project)) throw ApiError.notFound('Project does not exist');
     return project;
   }
 
-  static async stats(id: string) {
-    if (!isValidObjectId(id)) throw ApiError.badRequest('Invalid project id format');
+  static async stats(caller: Caller, id: string) {
+    await ProjectService.getById(caller, id);
 
     const [imageCount, annotationCount] = await Promise.all([
       ImageRepo.count({ project: id as any }),
