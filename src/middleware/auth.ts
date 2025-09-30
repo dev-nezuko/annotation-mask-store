@@ -1,18 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import logger from '../lib/logger';
-
-type TokenUser = { id: string; email: string; role: 'annotator' | 'admin'; name?: string };
-
-type JwtPayload = {
-  sub: string;
-  email: string;
-  role: 'annotator' | 'admin';
-  name?: string;
-  iat?: number;
-  exp?: number;
-};
+import { verifyToken } from '../lib/tokens';
 
 function parseAuthHeader(req: Request): string | null {
   const h = req.headers['authorization'];
@@ -25,10 +14,7 @@ function parseAuthHeader(req: Request): string | null {
 export function attachUserIfPresent(req: Request, _res: Response, next: NextFunction) {
   try {
     const token = parseAuthHeader(req);
-    if (token && env.JWT_SECRET) {
-      const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
-      (req as any).user = { id: payload.sub, email: payload.email, role: payload.role, name: payload.name } as TokenUser;
-    }
+    if (token) req.user = verifyToken(token);
   } catch (err) {
     logger.warn({ err }, 'Failed to parse/verify JWT');
   }
