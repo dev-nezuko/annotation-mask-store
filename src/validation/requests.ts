@@ -11,7 +11,7 @@ export const CreateProjectBody = z.object({
 });
 
 const ImageInput = z.object({
-  uri: z.string().trim().url().max(2048),
+  uri: z.string().trim().pipe(z.url({ protocol: /^(https?|s3|gs)$/ }).max(2048)),
   width: z.number().int().positive().max(100_000),
   height: z.number().int().positive().max(100_000),
   assignedTo: objectId.optional(),

@@ -37,6 +37,8 @@ describe('project and image bodies', () => {
     await post({ uri: 'https://example.com/a.jpg', width: 10.5, height: 10 }).expect(400);
     await post({ uri: 'https://example.com/a.jpg', width: '10', height: 10 }).expect(400);
     await post({ uri: 'not a uri', width: 10, height: 10 }).expect(400);
+    await post({ uri: 'javascript:alert(1)', width: 10, height: 10 }).expect(400);
+    await post({ uri: 's3://bucket/frames/0001.png', width: 10, height: 10 }).expect(201);
     await request(app).post(`/api/projects/${projectId}/images`).set(auth).send({ images: [] }).expect(400);
   });
 

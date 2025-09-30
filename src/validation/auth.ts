@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const email = z.string().trim().toLowerCase().email().max(254);
+const email = z.string().trim().toLowerCase().pipe(z.email().max(254));
 
 // bcrypt only looks at the first 72 bytes, so longer passwords would be
 // silently truncated.
