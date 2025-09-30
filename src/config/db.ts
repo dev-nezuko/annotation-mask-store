@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-// Simple Mongoose connection helper
 import logger from '../lib/logger';
 import { env } from './env';
 

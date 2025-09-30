@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface IProject extends Document {
+export interface IProject {
   name: string;
   description?: string;
   status: 'active' | 'archived';

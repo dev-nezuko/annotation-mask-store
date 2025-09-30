@@ -1,7 +1,7 @@
 import { Project, IProject } from '../models/Project';
 
 export class ProjectRepo {
-  static create(doc: Partial<IProject>) {
+  static create(doc: Pick<IProject, 'name' | 'description' | 'createdBy'>) {
     return Project.create(doc);
   }
 

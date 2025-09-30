@@ -1,5 +1,5 @@
+import { QueryFilter, Types } from 'mongoose';
 import { Annotation, IAnnotation } from '../models/Annotation';
-import { QueryFilter } from 'mongoose';
 
 export type FindOptions = {
   skip?: number;
@@ -8,7 +8,7 @@ export type FindOptions = {
 };
 
 export class AnnotationRepo {
-  static create(doc: Partial<IAnnotation>) {
+  static create(doc: Omit<IAnnotation, 'createdAt' | 'updatedAt'>) {
     return Annotation.create(doc);
   }
 
@@ -25,11 +25,19 @@ export class AnnotationRepo {
     return Annotation.countDocuments(filter);
   }
 
-  static countByImageGreaterArea(imageId: any, area: number) {
+  static countByImageGreaterArea(imageId: Types.ObjectId, area: number) {
     return Annotation.countDocuments({ image: imageId, area: { $gt: area } });
   }
 
-  static countByImage(imageId: any) {
+  static countByImage(imageId: Types.ObjectId) {
     return Annotation.countDocuments({ image: imageId });
+  }
+
+  /** Annotation counts per author within a project; `_id` is null for annotations without one. */
+  static countByAnnotator(projectId: Types.ObjectId) {
+    return Annotation.aggregate<{ _id: Types.ObjectId | null; count: number }>([
+      { $match: { project: projectId } },
+      { $group: { _id: '$createdBy', count: { $sum: 1 } } },
+    ]);
   }
 }

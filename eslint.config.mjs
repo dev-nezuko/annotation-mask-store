@@ -9,8 +9,6 @@ export default tseslint.config(
   {
     languageOptions: { globals: globals.node },
     rules: {
-      // Turned back on once the repository/service casts are typed.
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
     },
   },

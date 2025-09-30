@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import type { HydratedDocument } from 'mongoose';
 import { User, IUser } from '../models/User';
 import { signToken } from '../lib/tokens';
 import { ApiError } from '../lib/errors';
@@ -9,7 +10,7 @@ const BCRYPT_COST = 12;
 // time as a wrong password and does not reveal which emails exist.
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', BCRYPT_COST);
 
-function session(user: IUser) {
+function session(user: HydratedDocument<IUser>) {
   const id = String(user._id);
   return {
     user: { id, name: user.name, email: user.email, role: user.role },

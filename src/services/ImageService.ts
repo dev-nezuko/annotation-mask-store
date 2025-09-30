@@ -1,4 +1,4 @@
-import { isValidObjectId } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 import { ApiError } from '../lib/errors';
 import type { z } from 'zod';
 import type { CreateImagesBody } from '../validation/requests';
@@ -15,8 +15,12 @@ export class ImageService {
     const project = await ProjectRepo.findById(projectId);
     if (!project || !canAccessProject(caller, project)) throw ApiError.notFound('Project does not exist');
 
-    const docs = images.map((img) => ({ ...img, project: project._id }));
-    const created = await ImageRepo.insertMany(docs as any);
+    const docs = images.map(({ assignedTo, ...img }) => ({
+      ...img,
+      project: project._id,
+      assignedTo: assignedTo ? new Types.ObjectId(assignedTo) : undefined,
+    }));
+    const created = await ImageRepo.insertMany(docs);
     return { inserted: created.length, images: created };
   }
 

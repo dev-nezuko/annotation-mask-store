@@ -1,13 +1,13 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface IImage extends Document {
+export interface IImage {
   project: Types.ObjectId;
   uri: string;
   width: number;
   height: number;
   status: 'unassigned' | 'in_progress' | 'annotated';
   assignedTo?: Types.ObjectId;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }

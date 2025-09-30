@@ -15,13 +15,15 @@ const EnvSchema = z.object({
 export type Env = z.infer<typeof EnvSchema>;
 
 export function parseEnv(source: NodeJS.ProcessEnv): Env {
-  return EnvSchema.parse({
+  const result = EnvSchema.safeParse({
     PORT: source.PORT,
     MONGODB_URI: source.MONGODB_URI,
     LOG_LEVEL: source.LOG_LEVEL,
     JWT_SECRET: source.JWT_SECRET,
     JWT_EXPIRES_IN: source.JWT_EXPIRES_IN,
   });
+  if (!result.success) throw new Error(`Invalid environment:\n${z.prettifyError(result.error)}`);
+  return result.data;
 }
 
 export const env = parseEnv(process.env);

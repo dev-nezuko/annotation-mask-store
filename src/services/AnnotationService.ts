@@ -1,8 +1,8 @@
 import { isValidObjectId, Types } from 'mongoose';
-import { Image } from '../models/Image';
 import { Project } from '../models/Project';
 import { Caller, canAccessProject, ownedProjectsFilter } from '../lib/access';
 import { ProjectRepo } from '../repositories/ProjectRepo';
+import { ImageRepo } from '../repositories/ImageRepo';
 import { ImageService } from './ImageService';
 import { ProjectService } from './ProjectService';
 import { computeSegmentationArea } from '../utils/area';
@@ -17,9 +17,7 @@ export class AnnotationService {
 
     const image = await ImageService.getById(caller, imageId);
 
-    // Ensure project alignment
-    const derivedProjectId = image.project as Types.ObjectId;
-    if (projectId && projectId.toString() !== derivedProjectId.toString()) {
+    if (projectId && projectId !== String(image.project)) {
       throw ApiError.badRequest('project does not match the image project');
     }
 
@@ -37,7 +35,6 @@ export class AnnotationService {
       }
     }
 
-    // Compute area on server
     const computedArea = computeSegmentationArea(validSeg);
     if (!computedArea || computedArea <= 0) {
       throw ApiError.badRequest('Area could not be determined; supply a valid segmentation');
@@ -51,16 +48,16 @@ export class AnnotationService {
     }
 
     const ann = await AnnotationRepo.create({
-      project: derivedProjectId,
+      project: image.project,
       image: image._id,
       label,
-      segmentation: validSeg as any,
+      segmentation: validSeg,
       area: computedArea,
-      createdBy: caller.id as any,
+      createdBy: new Types.ObjectId(caller.id),
       metadata,
-    } as any);
+    });
 
-    await Image.updateOne({ _id: image._id }, { $set: { status: 'annotated' } });
+    await ImageRepo.markAnnotated(image._id);
 
     return ann;
   }

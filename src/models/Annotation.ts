@@ -1,13 +1,14 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
+import type { Segmentation } from '../utils/area';
 
-export interface IAnnotation extends Document {
+export interface IAnnotation {
   project: Types.ObjectId;
   image: Types.ObjectId;
   label: string;
-  segmentation: Record<string, any>;
+  segmentation: Segmentation;
   area: number;
   createdBy?: Types.ObjectId;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
