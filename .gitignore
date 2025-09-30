@@ -1,0 +1,29 @@
+# dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# environment (keep the example)
+.env
+.env.*
+!.env.example
+
+# logs, caches, scratch
+logs/
+*.log
+npm-debug.log*
+.npm/
+.cache/
+.eslintcache
+tmp/
+project_venv/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# hosted automation is out of scope for this repo
+.github/
