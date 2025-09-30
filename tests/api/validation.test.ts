@@ -99,3 +99,20 @@ describe('mask geometry', () => {
     expect(res.body.area).toBe(100);
   });
 });
+
+describe('request bodies', () => {
+  it('answers 400 for malformed JSON', async () => {
+    const res = await request(app).post('/api/projects').set(auth).set('Content-Type', 'application/json').send('{"name":').expect(400);
+    expect(res.body).toEqual({ error: { message: 'Malformed JSON body' } });
+  });
+
+  it('answers 413 for bodies over the size limit', async () => {
+    const huge = JSON.stringify({ name: 'x'.repeat(11 * 1024 * 1024) });
+    await request(app).post('/api/projects').set(auth).set('Content-Type', 'application/json').send(huge).expect(413);
+  });
+
+  it('answers 404 in the standard error shape for unknown routes', async () => {
+    const res = await request(app).get('/api/nope').expect(404);
+    expect(res.body).toEqual({ error: { message: 'Not Found' } });
+  });
+});
