@@ -81,3 +81,21 @@ describe('GET /api/annotations query', () => {
     await request(app).get('/api/annotations').query({ imageId: 'abc' }).set(auth).expect(400);
   });
 });
+
+describe('mask geometry', () => {
+  it('rejects polygons that reach outside the image', async () => {
+    const outside = { type: 'polygon', polygons: [{ rings: [[[0, 0], [11, 0], [0, 4]]] }] };
+    const res = await request(app).post('/api/annotations').set(auth).send({ image: imageId, label: 'x', segmentation: outside }).expect(400);
+    expect(res.body.error.message).toMatch(/within the 10x10 image/);
+    const edge = { type: 'polygon', polygons: [{ rings: [[[0, 0], [10, 0], [10, 10]]] }] };
+    await request(app).post('/api/annotations').set(auth).send({ image: imageId, label: 'x', segmentation: edge }).expect(201);
+  });
+
+  it('rejects RLE that claims more pixels than the mask has', async () => {
+    const inflated = { type: 'rle', size: [10, 10], counts: [0, 1000000] };
+    await request(app).post('/api/annotations').set(auth).send({ image: imageId, label: 'x', segmentation: inflated }).expect(400);
+    const full = { type: 'rle', size: [10, 10], counts: [0, 100] };
+    const res = await request(app).post('/api/annotations').set(auth).send({ image: imageId, label: 'x', segmentation: full }).expect(201);
+    expect(res.body.area).toBe(100);
+  });
+});

@@ -23,11 +23,17 @@ export class AnnotationService {
       throw ApiError.badRequest('project does not match the image project');
     }
 
-    // RLE size vs image dims
     if (validSeg.type === 'rle') {
       const [h, w] = validSeg.size;
       if (w !== image.width || h !== image.height) {
         throw ApiError.badRequest(`RLE size (${h}x${w}) must equal image dimensions (${image.height}x${image.width})`);
+      }
+    } else {
+      const outside = validSeg.polygons
+        .flatMap((p) => p.rings.flat())
+        .some(([x, y]) => x < 0 || y < 0 || x > image.width || y > image.height);
+      if (outside) {
+        throw ApiError.badRequest(`polygon points must lie within the ${image.width}x${image.height} image`);
       }
     }
 

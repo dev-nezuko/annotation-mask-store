@@ -21,6 +21,11 @@ describe('validateSegmentation', () => {
     expect(validateSegmentation({ type: 'rle', size: [2, 2], counts: [1, 2, 1] }).type).toBe('rle');
   });
 
+  it('rejects RLE counts that do not cover exactly height x width pixels', () => {
+    expect(() => validateSegmentation({ type: 'rle', size: [2, 2], counts: [0, 1000000] })).toThrow(/height x width/);
+    expect(() => validateSegmentation({ type: 'rle', size: [2, 2], counts: [1, 2] })).toThrow(/height x width/);
+  });
+
   it('rejects negative RLE counts and unknown types', () => {
     expect(() => validateSegmentation({ type: 'rle', size: [2, 2], counts: [-1, 5] })).toThrow();
     expect(() => validateSegmentation({ type: 'bbox', box: [0, 0, 1, 1] })).toThrow();
