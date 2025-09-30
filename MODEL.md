@@ -7,22 +7,25 @@ This document describes the core MongoDB/Mongoose schemas, relationships, and re
 - **User** (`src/models/User.ts`)
   - Fields
     - `name: string` (required)
-    - `email: string` (required, unique, indexed)
-    - `role: 'annotator' | 'admin'` (default: `annotator`)
+    - `email: string` (required, unique, stored lowercased and trimmed)
+    - `role: 'annotator' | 'admin'` (default: `annotator`; signup always creates annotators, admins are promoted in the database)
     - `passwordHash?: string` (only present for users created via `/auth/signup`)
     - `createdAt: Date`, `updatedAt: Date`
   - Notes
     - Email is unique; signup conflicts return 409.
+    - `passwordHash` is bcrypt with cost 12.
 
 - **Project** (`src/models/Project.ts`)
   - Fields
     - `name: string` (required)
     - `description?: string`
     - `status: 'active' | 'archived'` (default: `active`, indexed)
-    - `createdBy?: ObjectId<User>`
+    - `createdBy?: ObjectId<User>` (the owner; set from the caller's token)
     - `createdAt: Date`, `updatedAt: Date`
   - Indexes
     - `{ status: 1 }`
+  - Access
+    - Only the owner and admins can read the project or anything inside it.
 
 - **Image** (`src/models/Image.ts`)
   - Fields
@@ -30,7 +33,7 @@ This document describes the core MongoDB/Mongoose schemas, relationships, and re
     - `uri: string` (required)
     - `width: number` (required)
     - `height: number` (required)
-    - `status: 'unassigned' | 'in_progress' | 'annotated'` (default: `unassigned`, indexed)
+    - `status: 'unassigned' | 'in_progress' | 'annotated'` (default: `unassigned`, indexed; set to `annotated` when an annotation is created, never by the import)
     - `assignedTo?: ObjectId<User>`
     - `metadata?: object`
     - `createdAt: Date`, `updatedAt: Date`
@@ -62,7 +65,7 @@ This document describes the core MongoDB/Mongoose schemas, relationships, and re
         }
         ```
     - `area: number` (required)
-    - `createdBy?: ObjectId<User>` (indexed)
+    - `createdBy?: ObjectId<User>` (indexed; set from the caller's token)
     - `metadata?: object`
     - `createdAt: Date`, `updatedAt: Date`
   - Indexes
@@ -81,9 +84,10 @@ This document describes the core MongoDB/Mongoose schemas, relationships, and re
 
 ## Validation & Computation
 
-- `segmentation` is validated using Zod schemas in `src/validation/segmentation.ts`.
+- `segmentation` is validated using Zod schemas in `src/validation/segmentation.ts`; request bodies and queries use `src/validation/requests.ts`.
 - `area` is computed server-side by `computeSegmentationArea()` in `src/utils/area.ts`.
-- For RLE, `size` must match the target `Image` dimensions; for polygons, each ring must close and contain at least 3 points.
+- For RLE, `size` must match the target `Image` dimensions and `counts` must add up to exactly `height x width`.
+- For polygons, each ring needs at least 3 points (the last point connects back to the first) and every point must lie within `0..width` x `0..height` of the image.
 
 ## Example Payloads
 
@@ -121,12 +125,12 @@ This document describes the core MongoDB/Mongoose schemas, relationships, and re
 {
   "image": "<imageId>",
   "label": "dog",
-  "segmentation": { "type": "rle", "size": [480, 640], "counts": [1000, 200, 300, 150, 500] }
+  "segmentation": { "type": "rle", "size": [480, 640], "counts": [1000, 200, 305850, 150] }
 }
 ```
 
 ## Notes
 
-- `createdBy` defaults to the authenticated user when present (see `src/controllers/annotationController.ts`).
-- When `AUTH_REQUIRED=true`, write endpoints (create project, bulk images, create annotation) require a valid JWT.
+- `createdBy` on projects and annotations is always the authenticated caller; a value in the request body is ignored.
+- Every project, image and annotation endpoint requires a valid JWT.
 - Error responses follow `{ error: { message, details? } }`.
