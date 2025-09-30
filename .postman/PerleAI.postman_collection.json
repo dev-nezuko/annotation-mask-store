@@ -1,0 +1,125 @@
+{
+  "info": {
+    "name": "PerleAI Segmentation API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api" },
+    { "key": "projectId", "value": "{{projectId}}" },
+    { "key": "imageId", "value": "{{imageId}}" },
+    { "key": "annotationId", "value": "{{annotationId}}" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] } }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "POST /projects (create)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Demo Project\",\n  \"description\": \"Example\"\n}" },
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] }
+          }
+        },
+        {
+          "name": "GET /projects/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] } }
+        },
+        {
+          "name": "GET /projects/:id/stats",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/stats", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "stats"] } }
+        },
+        {
+          "name": "POST /projects/:id/images (bulk)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"images\": [\n    { \"uri\": \"https://example.com/img1.jpg\", \"width\": 640, \"height\": 480 }\n  ]\n}" },
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/images", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "images"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "GET /images/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/images/{{imageId}}", "host": ["{{baseUrl}}"], "path": ["images", "{{imageId}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Annotations",
+      "item": [
+        {
+          "name": "POST /annotations (polygon)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"{{imageId}}\",\n  \"label\": \"cat\",\n  \"segmentation\": {\n    \"type\": \"polygon\",\n    \"polygons\": [ { \"rings\": [ [[10,10],[100,10],[100,100],[10,100]] ] } ]\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/annotations", "host": ["{{baseUrl}}"], "path": ["annotations"] }
+          }
+        },
+        {
+          "name": "POST /annotations (RLE)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"{{imageId}}\",\n  \"label\": \"dog\",\n  \"segmentation\": {\n    \"type\": \"rle\",\n    \"size\": [480, 640],\n    \"counts\": [1000, 200, 300, 150, 500]\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/annotations", "host": ["{{baseUrl}}"], "path": ["annotations"] }
+          }
+        },
+        {
+          "name": "NEG: POST /annotations (invalid polygon ring)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"{{imageId}}\",\n  \"label\": \"invalid-cat\",\n  \"segmentation\": {\n    \"type\": \"polygon\",\n    \"polygons\": [ { \"rings\": [ [[10,10],[100,10]] ] } ]\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/annotations", "host": ["{{baseUrl}}"], "path": ["annotations"] }
+          }
+        },
+        {
+          "name": "NEG: POST /annotations (RLE size mismatch)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"{{imageId}}\",\n  \"label\": \"dog-bad-size\",\n  \"segmentation\": {\n    \"type\": \"rle\",\n    \"size\": [480, 641],\n    \"counts\": [1000, 200, 300, 150, 500]\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/annotations", "host": ["{{baseUrl}}"], "path": ["annotations"] }
+          }
+        },
+        {
+          "name": "NEG: POST /annotations (area mismatch)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"image\": \"{{imageId}}\",\n  \"label\": \"cat-bad-area\",\n  \"area\": 1,\n  \"segmentation\": {\n    \"type\": \"polygon\",\n    \"polygons\": [ { \"rings\": [ [[10,10],[100,10],[100,100],[10,100]] ] } ]\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/annotations", "host": ["{{baseUrl}}"], "path": ["annotations"] }
+          }
+        },
+        {
+          "name": "GET /annotations/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/annotations/{{annotationId}}", "host": ["{{baseUrl}}"], "path": ["annotations", "{{annotationId}}"] } }
+        },
+        {
+          "name": "GET /annotations (query)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/annotations?label=cat", "host": ["{{baseUrl}}"], "path": ["annotations"], "query": [{"key":"label","value":"cat"}] } }
+        },
+        {
+          "name": "GET /annotations/:id/rank",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/annotations/{{annotationId}}/rank", "host": ["{{baseUrl}}"], "path": ["annotations", "{{annotationId}}", "rank"] } }
+        }
+      ]
+    }
+  ]
+}
