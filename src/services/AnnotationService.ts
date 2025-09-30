@@ -23,8 +23,7 @@ export class AnnotationService {
     if (!label) throw ApiError.badRequest('label is mandatory');
     if (!segmentation) throw ApiError.badRequest('segmentation payload is required');
 
-    // Validate segmentation
-    let validSeg = validateSegmentation(segmentation);
+    const validSeg = validateSegmentation(segmentation);
 
     // Verify image exists
     const image = await Image.findById(imageId);
@@ -67,8 +66,7 @@ export class AnnotationService {
       metadata,
     } as any);
 
-    // Best-effort status tag
-    try { await Image.updateOne({ _id: image._id }, { $set: { status: 'annotated' } }); } catch {}
+    await Image.updateOne({ _id: image._id }, { $set: { status: 'annotated' } });
 
     return ann;
   }
