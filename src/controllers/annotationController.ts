@@ -12,7 +12,7 @@ export async function createAnnotation(req: Request, res: Response) {
   if (!imageId || !isValidObjectId(imageId)) {
     return res.status(400).json({ error: { message: 'image is required and must be a valid ObjectId' } });
   }
-  if (!label) return res.status(400).json({ error: { message: 'label is required' } });
+  if (typeof label !== 'string' || !label.trim() || label.length > 200) return res.status(400).json({ error: { message: 'label is required' } });
   if (!segmentation) return res.status(400).json({ error: { message: 'segmentation is required' } });
 
   let validSeg;
@@ -45,12 +45,15 @@ export async function createAnnotation(req: Request, res: Response) {
   } catch {
     return res.status(400).json({ error: { message: 'Failed to compute area from segmentation' } });
   }
-  if (!computedArea || computedArea <= 0) {
-    return res.status(400).json({ error: { message: 'area could not be determined; provide a positive area or valid segmentation' } });
+  if (!Number.isFinite(computedArea) || computedArea <= 0) {
+    return res.status(400).json({ error: { message: 'segmentation must have a finite positive area' } });
   }
 
   // If area is provided enforce the match with computed area (within small epsilon for float polygons)
-  if (typeof area === 'number' && area > 0) {
+  if (area !== undefined) {
+    if (typeof area !== 'number' || !Number.isFinite(area) || area <= 0) {
+      return res.status(400).json({ error: { message: 'area must be a finite positive number' } });
+    }
     const epsilon = 1e-6;
     if (Math.abs(area - computedArea) > epsilon) {
       return res.status(400).json({ error: { message: `Provided area ${area} does not match computed area ${computedArea}` } });
@@ -85,8 +88,11 @@ export async function getAnnotationById(req: Request, res: Response) {
 
 export async function queryAnnotations(req: Request, res: Response) {
   const { label, annotator, imageId, projectId } = req.query as Record<string, string>;
-  const page = Math.max(1, parseInt((req.query.page as string) || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
+  const page = req.query.page === undefined ? 1 : Number(req.query.page);
+  const limit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger((page - 1) * limit)) {
+    return res.status(400).json({ error: { message: 'page must be a positive integer and limit must be 1–100' } });
+  }
 
   const filter: any = {};
   if (label) filter.label = label;

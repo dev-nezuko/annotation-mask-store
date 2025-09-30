@@ -68,7 +68,7 @@ Supports non-rectangular masks.
 | image | ObjectId(Image) | Target image |
 | label | string | Class or object label |
 | segmentation | object | Polygon or RLE representation (see above) |
-| area | number | Area in pixels (computed if omitted) |
+| area | number | Area in pixels (always computed; optional input must match) |
 | createdBy | ObjectId(User) | Annotator reference |
 | metadata | object | Arbitrary key-value pairs |
 | createdAt | Date | Timestamp when created |
@@ -85,4 +85,4 @@ For a given annotation A on image I, its rank is defined as:
 ```
 rank(A) = 1 + count( annotations on I with area > area(A) )
 ```
-This is a 1-based competition rank. Ties receive the same numeric area but are ranked based on strict inequality.
+This is a 1-based competition rank. Equal areas share a rank; the next rank skips tied positions (for example 1, 1, 3).

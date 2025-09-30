@@ -8,13 +8,10 @@ import { connectDb } from './config/db';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 async function start() {
+  await connectDb();
   const server = http.createServer(app);
-  server.listen(PORT, () => {
+  server.listen(PORT, process.env.HOST || '127.0.0.1', () => {
     console.log(`Server listening on http://localhost:${PORT}`);
-  });
-
-  connectDb().catch((err) => {
-    console.error('MongoDB connection error at startup', err);
   });
 
   const shutdown = (signal: string) => {
@@ -34,6 +31,6 @@ async function start() {
 }
 
 start().catch((err) => {
-  console.error('Fatal startup error', err);
+  console.error('Startup failed; check database configuration and connectivity');
   process.exit(1);
 });
