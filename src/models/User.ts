@@ -11,7 +11,7 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, index: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   role: { type: String, enum: ['annotator', 'admin'], default: 'annotator' },
   passwordHash: { type: String },
 }, { timestamps: true });

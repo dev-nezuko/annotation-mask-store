@@ -42,7 +42,7 @@ describe('auth', () => {
     const creds = { name: 'Ada', email: 'ada@example.com', password: 'correct horse battery' };
     await request(app).post('/api/auth/signup').send(creds).expect(201);
     await request(app).post('/api/auth/signup').send(creds).expect(409);
-    await request(app).post('/api/auth/login').send({ email: creds.email, password: 'nope' }).expect(401);
+    await request(app).post('/api/auth/login').send({ email: creds.email, password: 'nope-nope' }).expect(401);
   });
 });
 
