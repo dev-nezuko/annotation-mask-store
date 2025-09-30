@@ -1,5 +1,5 @@
 import { Image, IImage } from '../models/Image';
-import { FilterQuery } from 'mongoose';
+import { QueryFilter } from 'mongoose';
 
 export class ImageRepo {
   static findById(id: string) {
@@ -10,7 +10,7 @@ export class ImageRepo {
     return Image.insertMany(docs, { ordered: true });
   }
 
-  static count(filter: FilterQuery<IImage>) {
+  static count(filter: QueryFilter<IImage>) {
     return Image.countDocuments(filter);
   }
 }

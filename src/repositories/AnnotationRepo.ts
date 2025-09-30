@@ -1,5 +1,5 @@
 import { Annotation, IAnnotation } from '../models/Annotation';
-import { FilterQuery } from 'mongoose';
+import { QueryFilter } from 'mongoose';
 
 export type FindOptions = {
   skip?: number;
@@ -16,12 +16,12 @@ export class AnnotationRepo {
     return Annotation.findById(id);
   }
 
-  static find(filter: FilterQuery<IAnnotation>, options: FindOptions = {}) {
+  static find(filter: QueryFilter<IAnnotation>, options: FindOptions = {}) {
     const { skip = 0, limit = 20, sort = { createdAt: -1 } } = options;
     return Annotation.find(filter).sort(sort).skip(skip).limit(limit);
   }
 
-  static count(filter: FilterQuery<IAnnotation>) {
+  static count(filter: QueryFilter<IAnnotation>) {
     return Annotation.countDocuments(filter);
   }
 

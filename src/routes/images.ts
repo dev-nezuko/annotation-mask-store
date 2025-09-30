@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { asyncHandler } from '../utils/asyncHandler';
 import { getImageById } from '../controllers/imageController';
 
 const router = Router();
 
-router.get('/:id', asyncHandler(getImageById));
+router.get('/:id', getImageById);
 
 export default router;

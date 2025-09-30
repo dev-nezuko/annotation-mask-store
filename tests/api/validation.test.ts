@@ -64,8 +64,15 @@ describe('annotation body', () => {
 });
 
 describe('GET /api/annotations query', () => {
-  it('rejects operator objects in place of a label', async () => {
-    await request(app).get('/api/annotations?label[$ne]=cat').set(auth).expect(400);
+  it('never turns bracketed query keys into Mongo operators', async () => {
+    await request(app).post('/api/annotations').set(auth).send({ image: imageId, label: 'dog', segmentation: tri }).expect(201);
+    // Express 5's simple parser keeps "label[$ne]" as a literal key, which the schema drops.
+    const res = await request(app).get('/api/annotations?label[$ne]=dog&label=cat').set(auth).expect(200);
+    expect(res.body.total).toBe(0);
+  });
+
+  it('rejects a repeated label instead of passing an array to Mongo', async () => {
+    await request(app).get('/api/annotations?label=cat&label=dog').set(auth).expect(400);
   });
 
   it('rejects non-numeric and out-of-range paging instead of passing NaN to Mongo', async () => {
