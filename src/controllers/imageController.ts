@@ -3,8 +3,7 @@ import { ImageService } from '../services/ImageService';
 
 export async function createImagesForProject(req: Request, res: Response) {
   const { projectId } = req.params;
-  const images: any[] = (req.body?.images as any[]) || [];
-  const result = await ImageService.createForProject(req.user!, projectId, images);
+  const result = await ImageService.createForProject(req.user!, projectId, req.body.images);
   res.status(201).json(result);
 }
 

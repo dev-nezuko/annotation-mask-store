@@ -6,28 +6,14 @@ import { ProjectRepo } from '../repositories/ProjectRepo';
 import { ImageService } from './ImageService';
 import { ProjectService } from './ProjectService';
 import { computeSegmentationArea } from '../utils/area';
-import { validateSegmentation } from '../validation/segmentation';
+import type { z } from 'zod';
+import type { AnnotationQueryInput, CreateAnnotationBody } from '../validation/requests';
 import { ApiError } from '../lib/errors';
 import { AnnotationRepo } from '../repositories/AnnotationRepo';
 
 export class AnnotationService {
-  static async create(caller: Caller, input: {
-    image: string;
-    project?: string;
-    label: string;
-    segmentation: unknown;
-    area?: number;
-    metadata?: Record<string, any>;
-  }) {
-    const { image: imageId, project: projectId, label, segmentation, area, metadata } = input;
-
-    if (!imageId || !isValidObjectId(imageId)) {
-      throw ApiError.badRequest('image must be provided as a valid ObjectId');
-    }
-    if (!label) throw ApiError.badRequest('label is mandatory');
-    if (!segmentation) throw ApiError.badRequest('segmentation payload is required');
-
-    const validSeg = validateSegmentation(segmentation);
+  static async create(caller: Caller, input: z.infer<typeof CreateAnnotationBody>) {
+    const { image: imageId, project: projectId, label, segmentation: validSeg, area, metadata } = input;
 
     const image = await ImageService.getById(caller, imageId);
 
@@ -82,21 +68,14 @@ export class AnnotationService {
     return ann;
   }
 
-  static async query(caller: Caller, params: { label?: string; annotator?: string; imageId?: string; projectId?: string; page: number; limit: number; }) {
+  static async query(caller: Caller, params: AnnotationQueryInput) {
     const { label, annotator, imageId, projectId, page, limit } = params;
 
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     if (label) filter.label = label;
-    if (annotator) {
-      if (!isValidObjectId(annotator)) throw ApiError.badRequest('annotator must be a valid ObjectId string');
-      filter.createdBy = annotator;
-    }
-    if (imageId) {
-      if (!isValidObjectId(imageId)) throw ApiError.badRequest('imageId must be a valid ObjectId string');
-      filter.image = imageId;
-    }
+    if (annotator) filter.createdBy = annotator;
+    if (imageId) filter.image = imageId;
     if (projectId) {
-      if (!isValidObjectId(projectId)) throw ApiError.badRequest('projectId must be a valid ObjectId string');
       await ProjectService.getById(caller, projectId);
       filter.project = projectId;
     } else if (caller.role !== 'admin') {

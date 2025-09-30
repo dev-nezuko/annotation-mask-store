@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AnnotationService } from '../services/AnnotationService';
-import { parsePagination } from '../utils/pagination';
+import type { AnnotationQueryInput } from '../validation/requests';
 
 export async function createAnnotation(req: Request, res: Response) {
   const ann = await AnnotationService.create(req.user!, req.body);
@@ -14,9 +14,7 @@ export async function getAnnotationById(req: Request, res: Response) {
 }
 
 export async function queryAnnotations(req: Request, res: Response) {
-  const { label, annotator, imageId, projectId } = req.query as Record<string, string>;
-  const { page, limit } = parsePagination(req.query.page as string, req.query.limit as string);
-  const result = await AnnotationService.query(req.user!, { label, annotator, imageId, projectId, page, limit });
+  const result = await AnnotationService.query(req.user!, req.query as unknown as AnnotationQueryInput);
   res.json(result);
 }
 

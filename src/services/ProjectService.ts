@@ -9,10 +9,7 @@ import { User } from '../models/User';
 export class ProjectService {
   static async create(caller: Caller, input: { name: string; description?: string }) {
     const { name, description } = input;
-    if (!name) throw ApiError.badRequest('name is required');
-
-    const project = await ProjectRepo.create({ name, description, createdBy: caller.id as any });
-    return project;
+    return ProjectRepo.create({ name, description, createdBy: caller.id as any });
   }
 
   /** Loads a project the caller may see. Other people's projects are reported as missing. */
