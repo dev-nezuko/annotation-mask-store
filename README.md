@@ -6,7 +6,6 @@ Backend service for storing and retrieving segmentation masks for an AI annotati
 - Node.js 18+
 - TypeScript
 - Express
-- MongoDB (Atlas)
 - Mongoose
 
 ## Quick Start
